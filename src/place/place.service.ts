@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
-import { v4 as uuidV4 } from 'uuid';
+import { v4 as uuidV4, validate } from 'uuid';
 import { Repository } from 'typeorm';
 import { Place } from './entities/place.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,7 +20,7 @@ export class PlaceService {
   async create(createPlaceDto: CreatePlaceDto) {
     try {
       const newPlace = this.placeRepository.create({ id: uuidV4(), ...createPlaceDto });
-      const result = await this.placeRepository.insert(newPlace);
+      await this.placeRepository.insert(newPlace);
       return newPlace;
     }
     catch (error) {
@@ -35,19 +35,45 @@ export class PlaceService {
     }
   }
 
-  findAll() {
-    return `This action returns all place`;
+  async findAll() {
+    try {
+      return (await this.placeRepository.findBy({}));
+    }
+    catch (error) {
+      console.log({ error })
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} place`;
+  async findOne(term: string) {
+    if (validate(term)) {
+      const place = await this.placeRepository.findOne({ where: { id: term } })
+      if (!place) {
+        throw new BadRequestException(`No existe una plaza con el id: ${term}`);
+      }
+      return place;
+    } else {
+      const place = await this.placeRepository.findOne({ where: { name: term } })
+      if (!place) {
+        throw new BadRequestException(`No existe una plaza con el nombre: ${term}`);
+      }
+      return place;
+    }
   }
 
-  update(id: number, updatePlaceDto: UpdatePlaceDto) {
-    return `This action updates a #${id} place`;
+  async update(id: string, updatePlaceDto: UpdatePlaceDto) {
+    const place = await this.findOne(id);
+    if (updatePlaceDto.name) {
+      const place = await this.placeRepository.preload({ id: id, ...updatePlaceDto });
+      const updatedPlace = await this.placeRepository.save(place);
+      return updatedPlace;
+    }
+    else {
+      return place;
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} place`;
+  async remove(id: string) {
+    const place = await this.findOne(id);
+    return await this.placeRepository.remove(place);
   }
 }
