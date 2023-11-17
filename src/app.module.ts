@@ -5,6 +5,8 @@ import { PlaceModule } from './place/place.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Place } from './place/entities/place.entity';
 import { UserModule } from './user/user.module';
+import { User } from './user/entities/user.entity';
+import { ReservationModule } from './reservation/reservation.module';
 
 @Module({
   imports: [
@@ -17,10 +19,11 @@ import { UserModule } from './user/user.module';
         username: 'postgres_user',
         password: 'postgres_password',
         database: 'parking',
-        entities: [Place],
+        entities: [Place, User],
         synchronize: true
       }),
-    UserModule
+    UserModule,
+    ReservationModule
   ],
   controllers: [AppController],
   providers: [AppService],
