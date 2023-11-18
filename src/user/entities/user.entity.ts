@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Vehicule } from "src/vehicule/entities/vehicule.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -16,5 +17,8 @@ export class User {
     password: string;
 
     @Column({ type: 'text', default: 'cliente' })
-    rols: string;
+    rol: string;
+
+    @OneToMany(() => Vehicule, (vehicule) => vehicule.owner)
+    vehicules: Vehicule[];
 }

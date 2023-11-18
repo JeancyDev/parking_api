@@ -7,6 +7,8 @@ import { Place } from './place/entities/place.entity';
 import { UserModule } from './user/user.module';
 import { User } from './user/entities/user.entity';
 import { ReservationModule } from './reservation/reservation.module';
+import { VehiculeModule } from './vehicule/vehicule.module';
+import { Vehicule } from './vehicule/entities/vehicule.entity';
 
 @Module({
   imports: [
@@ -19,11 +21,12 @@ import { ReservationModule } from './reservation/reservation.module';
         username: 'postgres_user',
         password: 'postgres_password',
         database: 'parking',
-        entities: [Place, User],
+        entities: [Place, User, Vehicule],
         synchronize: true
       }),
     UserModule,
-    ReservationModule
+    ReservationModule,
+    VehiculeModule
   ],
   controllers: [AppController],
   providers: [AppService],
