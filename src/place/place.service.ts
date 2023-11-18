@@ -16,12 +16,12 @@ export class PlaceService {
     private readonly placeRepository: Repository<Place>
   ) { }
 
-
+    private 
   async create(createPlaceDto: CreatePlaceDto) {
     try {
       const newPlace = this.placeRepository.create({ id: uuidV4(), ...createPlaceDto });
       await this.placeRepository.insert(newPlace);
-      return newPlace;
+      return { ...createPlaceDto };
     }
     catch (error) {
       if (error.code === '23505') {
