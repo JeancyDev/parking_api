@@ -49,7 +49,7 @@ export class VehiculeService {
 		return await this.vehiculeRepository.find({
 			relations: { owner: true },
 			select: {
-				mark: true,
+				brand: true,
 				model: true,
 				registration: true,
 				owner: {

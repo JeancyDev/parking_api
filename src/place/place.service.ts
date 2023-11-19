@@ -2,9 +2,10 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 import { v4 as uuidV4, validate } from 'uuid';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { Place } from './entities/place.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class PlaceService {
@@ -13,10 +14,11 @@ export class PlaceService {
 
   constructor(
     @InjectRepository(Place)
-    private readonly placeRepository: Repository<Place>
+    private readonly placeRepository: Repository<Place>,
+    private readonly commonService: CommonService
   ) { }
 
-    private 
+
   async create(createPlaceDto: CreatePlaceDto) {
     try {
       const newPlace = this.placeRepository.create({ id: uuidV4(), ...createPlaceDto });
@@ -24,51 +26,48 @@ export class PlaceService {
       return { ...createPlaceDto };
     }
     catch (error) {
-      if (error.code === '23505') {
-        const message: string = `Error de llave repetida: ${error.detail}`;
-        this.logger.error(message);
-        throw new BadRequestException(message);
-      }
-      else {
-        console.log({ error });
-      }
+      this.commonService.handleException(error, this.logger);
     }
   }
 
   async findAll() {
-    try {
-      return (await this.placeRepository.findBy({}));
-    }
-    catch (error) {
-      console.log({ error })
-    }
+    return (await this.placeRepository.find({
+      select: {
+        name: true
+      }
+    }));
   }
 
   async findOne(term: string) {
+    let whereOption: FindOptionsWhere<Place> = {};
     if (validate(term)) {
-      const place = await this.placeRepository.findOne({ where: { id: term } })
-      if (!place) {
-        throw new BadRequestException(`No existe una plaza con el id: ${term}`);
-      }
-      return place;
+      whereOption = { id: term };
     } else {
-      const place = await this.placeRepository.findOne({ where: { name: term } })
-      if (!place) {
-        throw new BadRequestException(`No existe una plaza con el nombre: ${term}`);
-      }
-      return place;
+      whereOption = { name: term };
     }
+    const place = await this.placeRepository.findOne({ where: whereOption })
+    if (!place) {
+      throw new BadRequestException(`No existe la plaza ${term}`);
+    }
+    return place;
   }
 
-  async update(id: string, updatePlaceDto: UpdatePlaceDto) {
-    const place = await this.findOne(id);
-    if (updatePlaceDto.name) {
+  async findOnePlain(term: string) {
+    return await this.plainPlace(await this.findOne(term));
+  }
+
+  async plainPlace(place: Place) {
+    const { id, ...props } = place;
+    return { ...props };
+  }
+
+  async update(term: string, updatePlaceDto: UpdatePlaceDto) {
+    const { id } = await this.findOne(term);
+    try {
       const place = await this.placeRepository.preload({ id: id, ...updatePlaceDto });
-      const updatedPlace = await this.placeRepository.save(place);
-      return updatedPlace;
-    }
-    else {
-      return place;
+      return await this.plainPlace(await this.placeRepository.save(place));
+    } catch (error) {
+      this.commonService.handleException(error, this.logger);
     }
   }
 

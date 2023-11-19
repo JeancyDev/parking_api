@@ -9,6 +9,9 @@ import { User } from './user/entities/user.entity';
 import { ReservationModule } from './reservation/reservation.module';
 import { VehiculeModule } from './vehicule/vehicule.module';
 import { Vehicule } from './vehicule/entities/vehicule.entity';
+import { CommonModule } from './common/common.module';
+import { Reservation } from './reservation/entities/reservation.entity';
+import { OcupationModule } from './ocupation/ocupation.module';
 
 @Module({
   imports: [
@@ -21,12 +24,14 @@ import { Vehicule } from './vehicule/entities/vehicule.entity';
         username: 'postgres_user',
         password: 'postgres_password',
         database: 'parking',
-        entities: [Place, User, Vehicule],
+        entities: [Place, User, Vehicule, Reservation],
         synchronize: true
       }),
     UserModule,
     ReservationModule,
-    VehiculeModule
+    VehiculeModule,
+    CommonModule,
+    OcupationModule
   ],
   controllers: [AppController],
   providers: [AppService],

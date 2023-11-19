@@ -50,7 +50,7 @@ export class UserService {
 				rol: true,
 				userName: true,
 				vehicules: {
-					mark: true,
+					brand: true,
 					model: true,
 					registration: true
 				}
