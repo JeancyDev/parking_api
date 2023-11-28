@@ -12,5 +12,6 @@ import { CommonModule } from 'src/common/common.module';
   ],
   controllers: [PlaceController],
   providers: [PlaceService],
+  exports: [PlaceService]
 })
 export class PlaceModule { }

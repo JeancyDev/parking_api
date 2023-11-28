@@ -1,4 +1,4 @@
-import { BadRequestException, HttpCode, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -6,7 +6,8 @@ import { User } from './entities/user.entity';
 import { v4 as uuidV4, validate } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { VehiculeService } from 'src/vehicule/vehicule.service';
+import { CommonService } from 'src/common/common.service';
+import { PlainUser } from './entities/user.plain';
 
 @Injectable()
 export class UserService {
@@ -15,31 +16,24 @@ export class UserService {
 
 	constructor(
 		@InjectRepository(User)
-		private readonly userRepository: Repository<User>) { }
+		private readonly userRepository: Repository<User>,
+		private readonly commonService: CommonService) { }
 
-	private handleException(error: any): void {
-		if (error.code === '23505') {
-			if (error.detail.includes('userName')) {
-				this.logger.error(`Error de llave repetida este usuario ya existe`);
-				throw new BadRequestException(`Error de llave repetida este usuario ya existe`);
-			}
-			if (error.detail.includes('email')) {
-				this.logger.error(`Error de llave repetida este email ya existe`);
-				throw new BadRequestException(`Error de llave repetida este email ya existe`);
-			}
-		} else {
-			console.log({ error });
-		}
+	async removeAll() {
+		await this.userRepository.delete({});
 	}
-
 	async create(createUserDto: CreateUserDto) {
 		try {
 			const { password, ...properties } = createUserDto;
-			const user = { id: uuidV4(), password: bcrypt.hashSync(password, 10), ...properties };
-			const newUser = this.userRepository.create(user);
-			return await this.userRepository.save(newUser);
+			const user = this.userRepository.create({
+				id: uuidV4(),
+				password: bcrypt.hashSync(password, 10),
+				...properties
+			});
+			await this.userRepository.insert(user);
+			return this.plainUser(user);
 		} catch (error) {
-			this.handleException(error);
+			this.commonService.handleException(error, this.logger);
 		}
 	}
 
@@ -48,77 +42,64 @@ export class UserService {
 			select: {
 				fullName: true,
 				rol: true,
-				userName: true,
-				vehicules: {
-					brand: true,
-					model: true,
-					registration: true
-				}
-			}, relations: { vehicules: true }
+				userName: true
+			}
 		});
 	}
 
-	async findOnePlain(term: string) {
-		return await this.plainUser(await this.findOne(term));
+	async findOnePlain(term: string): Promise<PlainUser> {
+		return this.plainUser(
+			await this.findOne(term)
+		);
 
 	}
 
-	async plainUser(user: User) {
+	plainUser(user: User): PlainUser {
 		const { id, password, ...userProperties } = user;
-		const vehicules = userProperties.vehicules.map(
-			(vehicule) => {
-				const { id, owner, ...props } = vehicule;
-				return props;
-			});
-		return { ...userProperties, vehicules };
+		const plainUser: PlainUser = { ...userProperties };
+		return plainUser
 	}
 
 	async findOne(term: string) {
-		let whereOption: FindOptionsWhere<User> = {};
 		if (validate(term)) {
-			whereOption = { id: term };
+			if (await this.userRepository.exist({ where: { id: term } }))
+				return await this.userRepository.findOne({ where: { id: term } })
+			else
+				throw new BadRequestException(`No existe el usuario con el id ${term}`);
 		}
 		else {
-			whereOption = { userName: term };
-		}
-		if (await this.userRepository.exist({ where: whereOption })) {
-			return await this.userRepository.findOne({
-				where: whereOption,
-				relations: { vehicules: true }
-			});
-		}
-		else {
-			throw new BadRequestException(`No existe un usuario ${term}`);
+			if (await this.userRepository.exist({ where: { userName: term } }))
+				return await this.userRepository.findOne({ where: { userName: term } })
+			else
+				throw new BadRequestException(`No existe el usuario con el usuario ${term}`);
 		}
 	}
 
 	async update(term: string, updateUserDto: UpdateUserDto) {
-		const { id, vehicules } = await this.findOne(term);
+		const { id } = await this.findOne(term);
 		try {
-			const user = await this.userRepository.preload({ id: id, ...updateUserDto });
+			const user: User = await this.userRepository.preload({
+				id: id,
+				...updateUserDto
+			});
 			if (updateUserDto.password) {
 				user.password = bcrypt.hashSync(user.password, 10);
 			}
-			const { fullName, userName, rol } = await this.userRepository.save(user);
-			return {
-				fullName, userName, rol, vehicules: vehicules.map(
-					(vehicule) => {
-						const { id, owner, ...props } = vehicule;
-						return props;
-					})
-			};
+			const optionWhere: FindOptionsWhere<User> = { id: user.id };
+			await this.userRepository.update(optionWhere, user);
+			return this.plainUser(user);
 		} catch (error) {
-			this.handleException(error);
+			this.commonService.handleException(error, this.logger);
 		}
 	}
 
 	async remove(term: string) {
 		const user = await this.findOne(term);
-		const plain = await this.plainUser(user);
+		const plain = this.plainUser(user);
 		try {
 			await this.userRepository.remove(user)
 		} catch (error) {
-			console.log({ error });
+			this.commonService.handleException(error, this.logger);
 		}
 		return plain;
 	}

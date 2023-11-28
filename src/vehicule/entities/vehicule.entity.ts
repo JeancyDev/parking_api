@@ -1,6 +1,7 @@
+import { Ocupation } from "src/ocupation/entities/ocupation.entity";
 import { Reservation } from "src/reservation/entities/reservation.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Vehicule {
@@ -20,14 +21,14 @@ export class Vehicule {
     })
     registration: string;
 
-    @ManyToOne(
+    @OneToOne(
         () => User,
-        (user) => user.id,
         {
             nullable: false,
-            onDelete: 'CASCADE'
+            onDelete: 'CASCADE',
         })
-    owner: User;
+    @JoinColumn({ foreignKeyConstraintName: 'FK_Usuario' })
+    user: User;
 
     @OneToMany(
         () => Reservation,
@@ -36,5 +37,9 @@ export class Vehicule {
             nullable: false,
             onDelete: 'CASCADE'
         })
-    reservations: Reservation[];
+    @JoinColumn({ foreignKeyConstraintName: 'FK_Reservaciones' })
+    reservations?: Reservation[];
+
+    @OneToOne(() => Ocupation, (ocupation) => ocupation.vehicule)
+    ocupation?: Ocupation;
 }

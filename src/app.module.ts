@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { PlaceModule } from './place/place.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Place } from './place/entities/place.entity';
@@ -12,28 +10,43 @@ import { Vehicule } from './vehicule/entities/vehicule.entity';
 import { CommonModule } from './common/common.module';
 import { Reservation } from './reservation/entities/reservation.entity';
 import { OcupationModule } from './ocupation/ocupation.module';
+import { Ocupation } from './ocupation/entities/ocupation.entity';
+import { SeedModule } from './seed/seed.module';
+import { CheckingModule } from './checking/checking.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { LogModule } from './log/log.module';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    PlaceModule,
+    ConfigModule.forRoot({
+      isGlobal: true
+    }),
     TypeOrmModule.forRoot(
       {
         type: 'postgres',
-        host: 'localhost',
-        port: 5432,
-        username: 'postgres_user',
-        password: 'postgres_password',
-        database: 'parking',
-        entities: [Place, User, Vehicule, Reservation],
+        host: process.env.DB_POSTGRES_HOST,
+        port: parseInt(process.env.DB_POSTGRES_PORT),
+        username: process.env.DB_POSTGRES_USER,
+        password: process.env.DB_POSTGRES_PASSWORD,
+        database: process.env.DB_POSTGRES_DB_NAME,
+        entities: [Place, User, Vehicule, Reservation, Ocupation],
         synchronize: true
       }),
+    MongooseModule.forRoot(
+      `mongodb://${process.env.DB_MONGO_HOST}:${process.env.DB_MONGO_PORT}/${process.env.DB_MONGO_DB_NAME}`,
+    ),
+    PlaceModule,
     UserModule,
     ReservationModule,
     VehiculeModule,
     CommonModule,
-    OcupationModule
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+    OcupationModule,
+    SeedModule,
+    CheckingModule,
+    LogModule,
+    AuthModule
+  ]
 })
 export class AppModule { }

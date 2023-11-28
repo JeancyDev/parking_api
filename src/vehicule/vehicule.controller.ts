@@ -2,7 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { VehiculeService } from './vehicule.service';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('vehicule')
 @Controller('vehicule')
 export class VehiculeController {
   constructor(private readonly vehiculeService: VehiculeService) { }
@@ -17,18 +19,18 @@ export class VehiculeController {
     return this.vehiculeService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.vehiculeService.findOnePlain(id);
+  @Get(':term')
+  findOne(@Param('id') term: string) {
+    return this.vehiculeService.findOnePlain(term);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateVehiculeDto: UpdateVehiculeDto) {
-    return this.vehiculeService.update(id, updateVehiculeDto);
+  @Patch(':term')
+  update(@Param('term') term: string, @Body() updateVehiculeDto: UpdateVehiculeDto) {
+    return this.vehiculeService.update(term, updateVehiculeDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.vehiculeService.remove(id);
+  @Delete(':term')
+  remove(@Param('term') term: string) {
+    return this.vehiculeService.remove(term);
   }
 }

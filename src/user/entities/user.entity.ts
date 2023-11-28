@@ -1,5 +1,5 @@
 import { Vehicule } from "src/vehicule/entities/vehicule.entity";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class User {
@@ -19,6 +19,4 @@ export class User {
     @Column({ type: 'text', default: 'cliente' })
     rol: string;
 
-    @OneToMany(() => Vehicule, (vehicule) => vehicule.owner)
-    vehicules: Vehicule[];
 }

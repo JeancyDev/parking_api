@@ -1,13 +1,13 @@
-import { BadRequestException, HttpCode, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vehicule } from './entities/vehicule.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { UserService } from 'src/user/user.service';
-import { User } from 'src/user/entities/user.entity';
 import { v4 as uuidV4, validate } from 'uuid';
-import { STATUS_CODES } from 'http';
+import { UserService } from 'src/user/user.service';
+import { PlainVehicule } from './entities/vehicule.plain';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class VehiculeService {
@@ -17,42 +17,34 @@ export class VehiculeService {
 	constructor(
 		@InjectRepository(Vehicule)
 		private readonly vehiculeRepository: Repository<Vehicule>,
-		private readonly userService: UserService
+		private readonly userService: UserService,
+		private readonly commonService: CommonService
 	) { }
 
-	private handleException(error: any) {
-		if (error.code === '23505') {
-			this.logger.error(`Error de llave repetida la matricula ya existe details: ${error.detail}`);
-			throw new BadRequestException(`Error de llave repetida ${error.detail}`);
-		}
-		else {
-			console.log({ error });
-		}
+	async removeAll() {
+		await this.vehiculeRepository.delete({});
 	}
 
 	async create(createVehiculeDto: CreateVehiculeDto) {
 		const { owner, ...vehiculeDetails } = createVehiculeDto;
 		const user = await this.userService.findOne(owner);
-		if (user.rol !== 'cliente') {
-			throw new BadRequestException(`El usuario ${user.userName} no esta registrado como cliente`);
-		}
+		const vehicule = this.vehiculeRepository.create({ user: user, id: uuidV4(), ...vehiculeDetails, reservations: [] });
 		try {
-			const vehicule = this.vehiculeRepository.create({ owner: user, id: uuidV4(), ...vehiculeDetails });
 			await this.vehiculeRepository.insert(vehicule);
-			return await this.plainVehicule(vehicule);
 		} catch (error) {
-			this.handleException(error);
+			this.commonService.handleException(error, this.logger);
 		}
+		return await this.plainVehicule(vehicule);
 	}
 
 	async findAll() {
 		return await this.vehiculeRepository.find({
-			relations: { owner: true },
+			relations: { user: true },
 			select: {
 				brand: true,
 				model: true,
 				registration: true,
-				owner: {
+				user: {
 					fullName: true,
 					userName: true,
 					rol: true
@@ -68,12 +60,13 @@ export class VehiculeService {
 	}
 
 	async plainVehicule(vehicule: Vehicule) {
-		const { id, owner, ...vehiculeProps } = vehicule;
-		const { vehicules, ...userProps } = await this.userService.findOnePlain(owner.userName);
-		return {
-			...vehiculeProps,
-			owner: userProps
+		const plain: PlainVehicule = {
+			brand: vehicule.brand,
+			model: vehicule.model,
+			registration: vehicule.registration,
+			owner: this.userService.plainUser(vehicule.user)
 		}
+		return plain;
 	}
 
 	async findOne(term: string) {
@@ -84,7 +77,7 @@ export class VehiculeService {
 		else {
 			whereOption = { registration: term };
 		}
-		const vehicule = await this.vehiculeRepository.findOne({ where: whereOption, relations: { owner: true } });
+		const vehicule = await this.vehiculeRepository.findOne({ where: whereOption, relations: { user: true } });
 		if (vehicule === null) {
 			this.logger.error(`No existe el vehiculo ${term}`);
 			throw new BadRequestException(`No existe el vehiculo ${term}`);
@@ -101,13 +94,13 @@ export class VehiculeService {
 			const { id } = await this.vehiculeRepository.save(updatedVehicule);
 			return await this.findOnePlain(id);
 		} catch (error) {
-			this.handleException(error);
+			this.commonService.handleException(error, this.logger);
 		}
 	}
 
 	async remove(term: string) {
 		const vehicule = await this.findOne(term);
 		await this.vehiculeRepository.remove(vehicule);
-		return this.plainVehicule(vehicule);
+		return await this.plainVehicule(vehicule);
 	}
 }

@@ -1,10 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Search } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiTags } from '@nestjs/swagger'
 
+@ApiTags('user')
 @Controller('user')
 export class UserController {
+
   constructor(private readonly userService: UserService) { }
 
   @Post()
@@ -32,3 +35,7 @@ export class UserController {
     return this.userService.remove(id);
   }
 }
+function ApiTag(target: typeof UserController): void | typeof UserController {
+  throw new Error('Function not implemented.');
+}
+

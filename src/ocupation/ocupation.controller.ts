@@ -1,34 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { OcupationService } from './ocupation.service';
-import { CreateOcupationDto } from './dto/create-ocupation.dto';
-import { UpdateOcupationDto } from './dto/update-ocupation.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('ocupation')
 @Controller('ocupation')
 export class OcupationController {
-  constructor(private readonly ocupationService: OcupationService) {}
-
-  @Post()
-  create(@Body() createOcupationDto: CreateOcupationDto) {
-    return this.ocupationService.create(createOcupationDto);
-  }
-
+  constructor(private readonly ocupationService: OcupationService) { }
+  
   @Get()
   findAll() {
-    return this.ocupationService.findAll();
+    return this.ocupationService.findAllPlain();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.ocupationService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOcupationDto: UpdateOcupationDto) {
-    return this.ocupationService.update(+id, updateOcupationDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ocupationService.remove(+id);
+    return this.ocupationService.findOnePlain(id);
   }
 }
