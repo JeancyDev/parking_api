@@ -16,7 +16,10 @@ import { CheckingModule } from './checking/checking.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LogModule } from './log/log.module';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule, JwtSecret } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/auth.guard';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -47,6 +50,11 @@ import { AuthModule } from './auth/auth.module';
     CheckingModule,
     LogModule,
     AuthModule
+  ],
+  providers: [{
+    provide: APP_GUARD,
+    useClass: AuthGuard
+  }
   ]
 })
 export class AppModule { }

@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { SigInDto } from './dto/sigIn.dto';
 import { ApiTags, ApiBearerAuth, ApiSecurity, ApiHeader, } from '@nestjs/swagger';
 import { AuthGuard } from './auth.guard';
+import { Payload } from './dto/payload';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -14,14 +15,4 @@ export class AuthController {
     login(@Body() sigIn: SigInDto) {
         return this.authService.signIn(sigIn);
     }
-
-    @UseGuards(AuthGuard)
-    @Get('profile')
-    @ApiBearerAuth()
-    @ApiSecurity('basic')
-    @ApiHeader({ name: 'acces_token' })
-    getProfile(@Request() req) {
-        return req.user;
-    }
-
 }

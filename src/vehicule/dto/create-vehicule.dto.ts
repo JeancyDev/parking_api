@@ -3,14 +3,14 @@ import { IsEmpty, IsNotEmpty, IsString } from "class-validator";
 
 export class CreateVehiculeDto {
 
-    @ApiProperty({
-        description: 'El cliente dueño del vehiculo (usuario)',
-        example: 'username',
-        type: String,
-    })
-    @IsString()
-    @IsNotEmpty()
-    owner: string
+    // @ApiProperty({
+    //     description: 'El cliente dueño del vehiculo (usuario)',
+    //     example: 'username',
+    //     type: String,
+    // })
+    // @IsString()
+    // @IsNotEmpty()
+    // owner: string
 
     @ApiProperty({
         type: String,

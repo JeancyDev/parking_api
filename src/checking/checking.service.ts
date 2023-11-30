@@ -25,7 +25,7 @@ export class CheckingService {
     let avilable = false;
     let ocupation: Ocupation = null;
     try {
-      ocupation = await this.ocupationService.findOne(reservation.place.name);
+      ocupation = await this.ocupationService.findOne({ reservationId: reservation.publicId });
       avilable = false;
     } catch (error) {
       avilable = true;
@@ -35,7 +35,6 @@ export class CheckingService {
       const ocupation = await this.ocupationService.create({
         dateTime: date,
         place: reservation.place,
-        vehicule: reservation.vehicule,
         reservation: reservation
       });
       await this.logService.create({
@@ -48,7 +47,7 @@ export class CheckingService {
     else {
       if (ocupation !== null) {
         if (ocupation.reservation.publicId === reservation.publicId) {
-          throw new BadRequestException(`El vehiculo ${ocupation.vehicule.registration} ya se encuentra ocupando la plaza`)
+          throw new BadRequestException(`El vehiculo ${ocupation.reservation.vehicule.registration} ya se encuentra ocupando la plaza`)
         } else {
           await this.reservationService.desactiveReservation(reservation.publicId);
           await this.logService.create({
@@ -65,12 +64,17 @@ export class CheckingService {
     }
   }
 
-  async checkOut(vehiculeRegistration: string) {
-    const vehicule = await this.vehiculeService.findOne(vehiculeRegistration);
+  async checkOut(reservationId: number) {
+    const reservation = await this.reservationService.findOne(reservationId);
     try {
-      const ocupation = await this.ocupationService.findOne(vehicule.registration);
-      await this.ocupationService.remove(vehicule.registration);
-      const ocupationStartDate = new Date(`${ocupation.startDate} ${ocupation.startTime}`);
+      const ocupation = await this.ocupationService.findOne({ reservationId: reservation.publicId });
+      await this.ocupationService.remove({
+        placeName: ocupation.place.name,
+        reservationId: ocupation.reservation.publicId,
+        userName: ocupation.reservation.vehicule.user.userName,
+        vehiculeRegistration: reservation.vehicule.registration
+      });
+      const ocupationStartDate: number = new Date(`${ocupation.startDate} ${ocupation.startTime}`).getTime();
       const endReservedDate = getDateAfterTime(
         ocupationStartDate,
         ocupation.reservation.time
@@ -81,23 +85,22 @@ export class CheckingService {
         endReservedDate
       );
 
-      const extendedTime = getTimeBetween(
-        endReservedDate,
-        new Date()
+      let extendedTime = getTimeBetween(
+        endReservedDate
       );
 
       const plainCheckOut: PlainCheckOut = {
-        vehiculeRegistration: ocupation.vehicule.registration,
+        vehiculeRegistration: ocupation.reservation.vehicule.registration,
         placeName: ocupation.place.name,
-        userName: ocupation.vehicule.user.userName,
+        userName: ocupation.reservation.vehicule.user.userName,
         startDate: new Date(`${ocupation.startDate} ${ocupation.startTime}`),
         endDate: new Date(),
         timeReserved: reservedTime,
-        timeExtended: extendedTime
+        timeExtended: extendedTime < 0 ? 0 : extendedTime
       }
 
       await this.logService.create({
-        userName: vehicule.user.userName,
+        userName: reservation.vehicule.user.userName,
         reservationId: ocupation.reservation.publicId,
         type: TypeLog.check_out
       })
@@ -105,15 +108,15 @@ export class CheckingService {
       await this.reservationService.desactiveReservation(ocupation.reservation.publicId);
       return plainCheckOut;
     } catch (error) {
-      throw new BadRequestException(`No existe una plaza ocupada por el vehiculo: ${vehiculeRegistration}`);
+      throw new BadRequestException(`No existe una plaza ocupada por el vehiculo: ${reservation.vehicule.registration}`);
     }
   }
 
   plainCheckIn(ocupation: Ocupation): PlainCheckIn {
     return {
       placeName: ocupation.place.name,
-      userName: ocupation.vehicule.user.userName,
-      vehiculeRegistration: ocupation.vehicule.registration,
+      userName: ocupation.reservation.vehicule.user.userName,
+      vehiculeRegistration: ocupation.reservation.vehicule.registration,
       date: ocupation.startDate
     }
   }

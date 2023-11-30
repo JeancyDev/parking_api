@@ -40,6 +40,4 @@ export class Vehicule {
     @JoinColumn({ foreignKeyConstraintName: 'FK_Reservaciones' })
     reservations?: Reservation[];
 
-    @OneToOne(() => Ocupation, (ocupation) => ocupation.vehicule)
-    ocupation?: Ocupation;
 }

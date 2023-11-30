@@ -8,6 +8,8 @@ import { v4 as uuidV4, validate } from 'uuid';
 import { UserService } from 'src/user/user.service';
 import { PlainVehicule } from './entities/vehicule.plain';
 import { CommonService } from 'src/common/common.service';
+import { FindVehiculeDto } from './dto/find-vehicule.dto';
+import { Payload } from 'src/auth/dto/payload';
 
 @Injectable()
 export class VehiculeService {
@@ -25,9 +27,9 @@ export class VehiculeService {
 		await this.vehiculeRepository.delete({});
 	}
 
-	async create(createVehiculeDto: CreateVehiculeDto) {
-		const { owner, ...vehiculeDetails } = createVehiculeDto;
-		const user = await this.userService.findOne(owner);
+	async create(findOption: FindVehiculeDto, createVehiculeDto: CreateVehiculeDto) {
+		const { ...vehiculeDetails } = createVehiculeDto;
+		const user = await this.userService.findOne(findOption.userName);
 		const vehicule = this.vehiculeRepository.create({ user: user, id: uuidV4(), ...vehiculeDetails, reservations: [] });
 		try {
 			await this.vehiculeRepository.insert(vehicule);
@@ -35,6 +37,14 @@ export class VehiculeService {
 			this.commonService.handleException(error, this.logger);
 		}
 		return await this.plainVehicule(vehicule);
+	}
+
+	private findOptionWhere(findOption: FindVehiculeDto): FindOptionsWhere<Vehicule> {
+		return {
+			id: findOption.id,
+			registration: findOption.registration,
+			user: { userName: findOption.userName }
+		}
 	}
 
 	async findAll() {
@@ -53,9 +63,9 @@ export class VehiculeService {
 		});
 	}
 
-	async findOnePlain(term: string) {
+	async findOnePlain(findOption: FindVehiculeDto) {
 		return this.plainVehicule(
-			await this.findOne(term)
+			await this.findOne(findOption)
 		);
 	}
 
@@ -69,37 +79,30 @@ export class VehiculeService {
 		return plain;
 	}
 
-	async findOne(term: string) {
-		let whereOption: FindOptionsWhere<Vehicule> = {};
-		if (validate(term)) {
-			whereOption = { id: term };
+	async findOne(findOption: FindVehiculeDto) {
+		let whereOption: FindOptionsWhere<Vehicule> = this.findOptionWhere(findOption);
+		if (await this.vehiculeRepository.exist({ where: whereOption })) {
+			return await this.vehiculeRepository.findOne({ where: whereOption, relations: { user: true } });
+		} else {
+			this.logger.error(`No existe el vehiculo`);
+			throw new BadRequestException(`No existe el vehiculo`);
 		}
-		else {
-			whereOption = { registration: term };
-		}
-		const vehicule = await this.vehiculeRepository.findOne({ where: whereOption, relations: { user: true } });
-		if (vehicule === null) {
-			this.logger.error(`No existe el vehiculo ${term}`);
-			throw new BadRequestException(`No existe el vehiculo ${term}`);
-		}
-		return vehicule;
-
 	}
 
-	async update(term: string, updateVehiculeDto: UpdateVehiculeDto) {
-		const vehicule = await this.findOne(term);
+	async update(findOption: FindVehiculeDto, updateVehiculeDto: UpdateVehiculeDto) {
+		const vehicule = await this.findOne(findOption);
 		const { owner, ...updateProps } = updateVehiculeDto;
 		try {
 			const updatedVehicule = await this.vehiculeRepository.preload({ id: vehicule.id, ...updateProps });
 			const { id } = await this.vehiculeRepository.save(updatedVehicule);
-			return await this.findOnePlain(id);
+			return await this.findOnePlain({ id: id });
 		} catch (error) {
 			this.commonService.handleException(error, this.logger);
 		}
 	}
 
-	async remove(term: string) {
-		const vehicule = await this.findOne(term);
+	async remove(findOption: FindVehiculeDto) {
+		const vehicule = await this.findOne(findOption);
 		await this.vehiculeRepository.remove(vehicule);
 		return await this.plainVehicule(vehicule);
 	}

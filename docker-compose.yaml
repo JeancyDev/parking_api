@@ -22,3 +22,9 @@ services:
       - ${DB_MONGO_PORT}:${DB_MONGO_PORT}
     environment:
       MONGO_INITDB_DATABASE: ${DB_MONGO_DB_NAME}
+
+  # adminer:
+  #   image: adminer:latest
+  #   restart: always
+  #   ports:
+  #     - 8080:8080

@@ -8,6 +8,7 @@ import * as bcrypt from 'bcrypt';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { CommonService } from 'src/common/common.service';
 import { PlainUser } from './entities/user.plain';
+import { Payload } from 'src/auth/dto/payload';
 
 @Injectable()
 export class UserService {
@@ -60,47 +61,42 @@ export class UserService {
 		return plainUser
 	}
 
-	async findOne(term: string) {
-		if (validate(term)) {
-			if (await this.userRepository.exist({ where: { id: term } }))
-				return await this.userRepository.findOne({ where: { id: term } })
-			else
-				throw new BadRequestException(`No existe el usuario con el id ${term}`);
-		}
-		else {
-			if (await this.userRepository.exist({ where: { userName: term } }))
-				return await this.userRepository.findOne({ where: { userName: term } })
-			else
-				throw new BadRequestException(`No existe el usuario con el usuario ${term}`);
-		}
+	async findOne(userName: string) {
+		if (await this.userRepository.exist({ where: { userName: userName } }))
+			return await this.userRepository.findOne({ where: { userName: userName } })
+		else
+			throw new BadRequestException(`No existe el usuario: ${userName}`);
 	}
 
-	async update(term: string, updateUserDto: UpdateUserDto) {
-		const { id } = await this.findOne(term);
+	async update(userName: string, updateUserDto: UpdateUserDto) {
+		const userOld = await this.findOne(userName);
 		try {
 			const user: User = await this.userRepository.preload({
-				id: id,
+				id: userOld.id,
 				...updateUserDto
 			});
 			if (updateUserDto.password) {
 				user.password = bcrypt.hashSync(user.password, 10);
 			}
-			const optionWhere: FindOptionsWhere<User> = { id: user.id };
-			await this.userRepository.update(optionWhere, user);
+			const where: FindOptionsWhere<User> = { id: user.id };
+			await this.userRepository.update(where, user);
 			return this.plainUser(user);
 		} catch (error) {
 			this.commonService.handleException(error, this.logger);
 		}
 	}
 
-	async remove(term: string) {
-		const user = await this.findOne(term);
-		const plain = this.plainUser(user);
-		try {
-			await this.userRepository.remove(user)
-		} catch (error) {
-			this.commonService.handleException(error, this.logger);
+	async remove(userName: string) {
+		if (await this.userRepository.exist({ where: { userName: userName } })) {
+			const where: FindOptionsWhere<User> = { userName: userName };
+			try {
+				return await this.userRepository.delete(where);
+			} catch (error) {
+				this.commonService.handleException(error, this.logger);
+			}
 		}
-		return plain;
+		else {
+			throw new BadRequestException(`No existe el usuario: ${userName}`);
+		}
 	}
 }

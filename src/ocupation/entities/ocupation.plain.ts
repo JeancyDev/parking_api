@@ -3,4 +3,5 @@ export class PlainOcupation {
     vehiculeRegistration: string;
     userName: string;
     startDate: Date;
+    time: number;
 }

@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { Rol } from '../entities/user.rol';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
 
@@ -29,11 +30,11 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
     password?: string;
 
     @ApiProperty({
-        type: String,
+        type: Rol,
         description: 'El rol del usuario',
         example: 'cliente',
         required: false,
-        enum: ['cliente', 'empleado', 'administrador'],
+        enum: Rol,
     })
-    rol?: string;
+    rol?: Rol;
 }

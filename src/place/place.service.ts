@@ -92,7 +92,7 @@ export class PlaceService {
     return this.plainPlace(place);
   }
 
-  async findPlaceFree(start: Date, end: Date) {
+  async findPlaceFree(start: number, end: number) {
     const placeAll = await this.findAll();
     if (placeAll.some(
       (place) => {
@@ -114,10 +114,15 @@ export class PlaceService {
     }
   }
 
-  isPlaceFreeInRange(reservation: Reservation, startDate: Date, endDate: Date): boolean {
-    const start: Date = new Date(`${reservation.startDate} ${reservation.startTime}`);
-    const end: Date = getDateAfterTime(start, reservation.time);
-
+  isPlaceFreeInRange(reservation: Reservation, startDate: number, endDate: number): boolean {
+    const start: number = new Date(`${reservation.startDate} ${reservation.startTime}`).getTime();
+    const end: number = getDateAfterTime(start, reservation.time);
+    console.log({
+      reservationStart: new Date(start),
+      reservationEnd: new Date(end),
+      start: new Date(startDate),
+      end: new Date(endDate)
+    })
     if (isDateBetween(start, end, startDate)) { return false; }
     if (isDateBetween(start, end, endDate)) { return false; }
     if (isDateBetween(startDate, endDate, start)) { return false; }

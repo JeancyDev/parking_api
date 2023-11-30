@@ -1,5 +1,6 @@
 import { Vehicule } from "src/vehicule/entities/vehicule.entity";
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Rol } from "./user.rol";
 
 @Entity()
 export class User {
@@ -16,7 +17,7 @@ export class User {
     @Column({ type: 'text' })
     password: string;
 
-    @Column({ type: 'text', default: 'cliente' })
-    rol: string;
+    @Column({ type: 'enum', default: Rol.cliente, enum: Rol })
+    rol: Rol;
 
 }

@@ -9,21 +9,17 @@ export class Ocupation {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @OneToOne(() => Vehicule, (vehicule) => vehicule.ocupation, { cascade: true, onDelete: 'CASCADE' })
-    @JoinColumn({ foreignKeyConstraintName: 'FK_Vehicule' })
-    vehicule: Vehicule;
-
-    @OneToOne(() => Place, (place) => place.ocupation, { cascade: true, onDelete: 'CASCADE' })
+    @OneToOne(() => Place, (place) => place.ocupation, { nullable: false, cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({ foreignKeyConstraintName: 'FK_Place' })
     place: Place;
 
-    @OneToOne(() => Reservation, (reservation) => reservation.ocupation, { cascade: true, onDelete: 'CASCADE' })
+    @OneToOne(() => Reservation, (reservation) => reservation.ocupation, { nullable: false, cascade: true, onDelete: 'CASCADE' })
     @JoinColumn({ foreignKeyConstraintName: 'FK_Reservation' })
     reservation: Reservation;
 
-    @Column({ type: 'date' })
+    @Column({ type: 'date', nullable: false })
     startDate: Date;
 
-    @Column({ type: 'time' })
+    @Column({ type: 'time', nullable: false })
     startTime: Date;
 }

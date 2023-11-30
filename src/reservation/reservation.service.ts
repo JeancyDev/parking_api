@@ -3,7 +3,7 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Reservation } from './entities/reservation.entity';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { FindOptionsWhere, Repository, FindOptionsRelations } from 'typeorm';
 import { CommonService } from 'src/common/common.service';
 import { v4 as uuidV4 } from 'uuid';
 import { VehiculeService } from 'src/vehicule/vehicule.service';
@@ -13,6 +13,8 @@ import { PlainReservation } from './entities/reservation.plain';
 import { Place } from 'src/place/entities/place.entity';
 import { LogService } from 'src/log/log.service';
 import { TypeLog } from 'src/log/entities/type.log';
+import { Payload } from 'src/auth/dto/payload';
+import { Rol } from 'src/user/entities/user.rol';
 
 @Injectable()
 export class ReservationService {
@@ -26,22 +28,24 @@ export class ReservationService {
 		private readonly logService: LogService,
 		private readonly commonService: CommonService) { }
 
-	async create(createReservationDto: CreateReservationDto) {
-		const startDate: Date = new Date(createReservationDto.dateTime);
-		const endDate: Date = getDateAfterTime(startDate, createReservationDto.time);
-		const vehicule = await this.vehiculeService.findOne(createReservationDto.vehiculeRegistration);
-
+	async create(createReservationDto: CreateReservationDto, user: Payload) {
+		const startDate: number = new Date(createReservationDto.dateTime).getTime();
+		const endDate: number = getDateAfterTime(startDate, createReservationDto.time);
+		const vehicule = await this.vehiculeService.findOne({
+			userName: user.userName
+		});
 		const place = await this.placeService.findPlaceFree(startDate, endDate);
 		const reservation = this.reservationRepository.create({
 			id: uuidV4(),
-			startDate: startDate,
+			startDate: new Date(startDate),
 			vehicule: vehicule,
 			place: place,
-			startTime: startDate,
+			startTime: new Date(startDate),
 			time: createReservationDto.time
 		})
 		try {
-			reservation.publicId = await this.findLastId() + 1;
+			reservation.publicId = await this.findLastId();
+			reservation.publicId++;
 			await this.reservationRepository.insert(reservation);
 
 			await this.logService.create({
@@ -62,13 +66,14 @@ export class ReservationService {
 			startTime: reservation.startTime,
 			time: reservation.time,
 			placeName: reservation.place.name,
-			vehiculeRegistration: reservation.vehicule.registration
+			vehiculeRegistration: reservation.vehicule.registration,
+			userName: reservation.vehicule.user.userName
 		}
 	}
 
-	async findAll() {
+	async findAll(userName?: string) {
 		return await this.reservationRepository.find({
-			where: { isActive: true },
+			where: { isActive: true, vehicule: { user: { userName: userName } } },
 			relations: {
 				place: true,
 				vehicule: {
@@ -81,28 +86,56 @@ export class ReservationService {
 		});
 	}
 
-	async findAllPlain() {
-		return (await this.findAll()).map((reservation) => {
-			return this.plainReservation(reservation);
-		});
+	async findAllPlain(user?: Payload) {
+		if (user.rol === Rol.admin) {
+			return (await this.findAll()).map((reservation) => {
+				return this.plainReservation(reservation);
+			});
+		} else {
+			return (await this.findAll(user.userName)).map((reservation) => {
+				return this.plainReservation(reservation);
+			});
+		}
 	}
 
-	async findOne(id: number) {
-		if (await this.reservationRepository.exist({ where: { publicId: id, isActive: true } })) {
-			return await this.reservationRepository.findOne({ where: { publicId: id, isActive: true }, relations: { place: true, vehicule: { user: true } } })
+	async findOne(id: number, userName?: string) {
+		const relations: FindOptionsRelations<Reservation> = {
+			place: true,
+			vehicule: { user: true }
+		};
+		let whereOption: FindOptionsWhere<Reservation> = {};
+		if (userName) {
+			whereOption = {
+				publicId: id,
+				isActive: true,
+				vehicule: { user: { userName: userName } }
+			}
 		}
 		else {
-			throw new BadRequestException(`No existe una reservacion con el id: ${id}`);
+			whereOption = {
+				publicId: id,
+				isActive: true,
+			};
 		}
+		if (await this.reservationRepository.exist({ where: whereOption })) {
+			return await this.reservationRepository.findOne({ where: whereOption, relations: relations });
+		}
+		throw new BadRequestException(`No existe una reservacion con el id: ${id}`);
 	}
 
-	async findOnePlain(id: number) {
-		const reservation = await this.findOne(id);
-		return this.plainReservation(reservation);
+	async findOnePlain(id: number, user?: Payload) {
+		if (user) {
+			if (user.rol === Rol.admin) {
+				return this.plainReservation(await this.findOne(id));
+			}
+			else if (user.rol === Rol.cliente) {
+				return this.plainReservation(await this.findOne(id, user.userName));
+			}
+		}
 	}
 
 	async findLastId() {
-		const res = await this.reservationRepository.find({ order: { publicId: { direction: 'ASC' } } });
+		const res = await this.reservationRepository.find({ order: { publicId: { direction: 'DESC' } } });
 		if (res.length === 0) {
 			return 0;
 		} else {
@@ -111,20 +144,20 @@ export class ReservationService {
 	}
 
 	async update(id: number, updateReservationDto: UpdateReservationDto) {
-		const reservation = await this.findOne(id);
-		const start = new Date(updateReservationDto.dateTime);
-		const end = getDateAfterTime(start, updateReservationDto.time);
+		const reservation: Reservation = await this.findOne(id);
+		const start: number = new Date(updateReservationDto.dateTime).getTime();
+		const end: number = getDateAfterTime(start, updateReservationDto.time);
 		const where: FindOptionsWhere<Reservation> = { id: reservation.id };
 		const place = await this.placeService.findPlaceFree(start, end);
 		try {
 			await this.reservationRepository.update(where, {
-				startDate: start,
-				startTime: start,
+				startDate: new Date(start),
+				startTime: new Date(start),
 				time: updateReservationDto.time,
 				place: place
 			});
-			reservation.startDate = start;
-			reservation.startTime = start;
+			reservation.startDate = new Date(start);
+			reservation.startTime = new Date(start);
 			reservation.time = updateReservationDto.time;
 
 			return this.plainReservation(reservation);
@@ -133,8 +166,13 @@ export class ReservationService {
 		}
 	}
 
-	async desactiveReservation(id: number) {
-		const reservation = await this.findOne(id);
+	async desactiveReservation(id: number, req?: Payload) {
+		let reservation: Reservation = undefined;
+		if (req) {
+			reservation = await this.findOne(id, req.userName);
+		} else {
+			reservation = await this.findOne(id);
+		}
 		reservation.isActive = false;
 		const where: FindOptionsWhere<Reservation> = { publicId: id }
 		await this.reservationRepository.update(where, reservation);
@@ -143,5 +181,6 @@ export class ReservationService {
 			reservationId: reservation.publicId,
 			type: TypeLog.cancelar
 		})
+		return this.plainReservation(reservation);
 	}
 }

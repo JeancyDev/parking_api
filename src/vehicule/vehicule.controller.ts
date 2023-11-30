@@ -1,36 +1,45 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
 import { VehiculeService } from './vehicule.service';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { AuhtUserRol } from 'src/auth/auth.decorator';
+import { Rol } from 'src/user/entities/user.rol';
 
+@ApiSecurity('basic')
+@ApiBearerAuth()
 @ApiTags('vehicule')
 @Controller('vehicule')
 export class VehiculeController {
   constructor(private readonly vehiculeService: VehiculeService) { }
 
+  @AuhtUserRol([Rol.cliente])
   @Post()
-  create(@Body() createVehiculeDto: CreateVehiculeDto) {
-    return this.vehiculeService.create(createVehiculeDto);
+  create(@Request() req: any, @Body() createVehiculeDto: CreateVehiculeDto) {
+    return this.vehiculeService.create({ userName: req.user.userName }, createVehiculeDto);
   }
 
+  @AuhtUserRol([Rol.admin])
   @Get()
   findAll() {
     return this.vehiculeService.findAll();
   }
 
-  @Get(':term')
-  findOne(@Param('id') term: string) {
-    return this.vehiculeService.findOnePlain(term);
+  @AuhtUserRol([Rol.cliente])
+  @Get(':registration')
+  findOne(@Request() req: any, @Param('registration') registration: string) {
+    return this.vehiculeService.findOnePlain({ registration: registration, userName: req.user.userName });
   }
 
-  @Patch(':term')
-  update(@Param('term') term: string, @Body() updateVehiculeDto: UpdateVehiculeDto) {
-    return this.vehiculeService.update(term, updateVehiculeDto);
+  @AuhtUserRol([Rol.cliente])
+  @Patch(':registration')
+  update(@Request() req: any, @Param('registration') registration: string, @Body() updateVehiculeDto: UpdateVehiculeDto) {
+    return this.vehiculeService.update({ registration: registration, userName: req.user.userName }, updateVehiculeDto);
   }
 
-  @Delete(':term')
-  remove(@Param('term') term: string) {
-    return this.vehiculeService.remove(term);
+  @AuhtUserRol([Rol.cliente])
+  @Delete(':registration')
+  remove(@Request() req: any, @Param('registration') registration: string) {
+    return this.vehiculeService.remove({ registration: registration, userName: req.user.userName });
   }
 }

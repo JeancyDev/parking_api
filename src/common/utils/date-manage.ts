@@ -89,19 +89,23 @@ export function getDateForSimple(simpleDate: SimpleDateDto, simpleTime?: SimpleT
     }
 }
 
-export function getTimeBetween(startDate: Date, endDate?: Date) {
+export function getTimeBetween(startDate: number, endDate?: number) {
     if (!endDate)
-        return endDate.valueOf() - startDate.valueOf();
+        return endDate - startDate;
     else
-        return new Date().valueOf() - startDate.valueOf();
+        return new Date().getTime() - startDate;
 }
 
-export function getDateAfterTime(date: Date, time: number) {
-    return new Date(date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours() + time, date.getMinutes());
+export function getDateAfterTime(date: number, time: number): number {
+    return date + hoursToMiliseconds(time);
 }
 
-export function isDateBetween(start: Date, end: Date, date: Date): boolean {
-    return isDateAfter(start, date) && isDateAfter(date, end);
+function hoursToMiliseconds(hours: number): number {
+    return hours * 3600000;
+}
+
+export function isDateBetween(start: number, end: number, date: number): boolean {
+    return start <= date && date <= end;
 }
 
 export function isDateAfter(start: Date, date: Date): boolean {

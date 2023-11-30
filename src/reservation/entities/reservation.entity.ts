@@ -12,6 +12,7 @@ export class Reservation {
 
     @Column({
         type: 'numeric',
+        unique: true
     })
     publicId: number;
 

@@ -4,14 +4,14 @@ import { SimpleDateDto, SimpleTimeDto } from "../../common/utils/date-manage";
 
 export class CreateReservationDto {
 
-    @ApiProperty({
-        type: String,
-        description: 'La matricula del vehiculo',
-        example: 'matricula',
-    })
-    @IsString()
-    @IsNotEmpty()
-    vehiculeRegistration: string;
+    // @ApiProperty({
+    //     type: String,
+    //     description: 'La matricula del vehiculo',
+    //     example: 'matricula',
+    // })
+    // @IsString()
+    // @IsNotEmpty()
+    // vehiculeRegistration: string;
 
     @ApiProperty({
         type: () => Date,

@@ -6,6 +6,7 @@ import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
 import { v4 as uuidV4, validate } from 'uuid';
 import { CommonService } from 'src/common/common.service';
 import { PlainOcupation } from './entities/ocupation.plain';
+import { FindOcupationDto } from './dto/find-ocupation.dto';
 
 @Injectable()
 export class OcupationService {
@@ -22,7 +23,6 @@ export class OcupationService {
     const ocupation = this.ocupationRepository.create({
       id: uuidV4(),
       place: createOcupationDto.place,
-      vehicule: createOcupationDto.vehicule,
       startDate: createOcupationDto.dateTime,
       startTime: createOcupationDto.dateTime,
       reservation: createOcupationDto.reservation
@@ -37,7 +37,7 @@ export class OcupationService {
   }
 
   async findAll() {
-    return await this.ocupationRepository.find({ relations: { reservation: true, place: true, vehicule: { user: true, reservations: true } } })
+    return await this.ocupationRepository.find({ relations: { place: true, reservation: { vehicule: { user: true } } } });
   }
 
   async findAllPlain() {
@@ -49,69 +49,58 @@ export class OcupationService {
   plainOcupationDB(ocupation: Ocupation): PlainOcupation {
     return {
       placeName: ocupation.place.name,
-      vehiculeRegistration: ocupation.vehicule.registration,
-      userName: ocupation.vehicule.user.userName,
-      startDate: new Date(`${ocupation.startDate} ${ocupation.startTime}`)
+      vehiculeRegistration: ocupation.reservation.vehicule.registration,
+      userName: ocupation.reservation.vehicule.user.userName,
+      startDate: new Date(`${ocupation.startDate} ${ocupation.startTime}`),
+      time: ocupation.reservation.time
     };
   }
 
   plainOcupation(ocupation: Ocupation): PlainOcupation {
     return {
       placeName: ocupation.place.name,
-      vehiculeRegistration: ocupation.vehicule.registration,
-      userName: ocupation.vehicule.user.userName,
-      startDate: new Date(ocupation.startDate)
+      vehiculeRegistration: ocupation.reservation.vehicule.registration,
+      userName: ocupation.reservation.vehicule.user.userName,
+      startDate: new Date(ocupation.startDate),
+      time: ocupation.reservation.time
     }
   }
 
-  async findOne(term: string) {
+  async findOne(findOption: FindOcupationDto) {
     const relations: FindOptionsRelations<Ocupation> = {
-      reservation: true,
+      reservation: { vehicule: { user: true } },
       place: true,
-      vehicule: { user: true }
     }
-    if (validate(term)) {
-      if (await this.ocupationRepository.exist({
-        where: { id: term }
-      })) {
-        return await this.ocupationRepository.findOne({
-          where: { id: term },
-          relations: relations
-        });
-      }
-      throw new BadRequestException(`No existe una plaza ocupada con el id: ${term}`);
-    }
-    if (await this.ocupationRepository.exist({
-      where: {
-        place: { name: term }
-      }, relations: { place: true }
-    })) {
+
+    let whereOption: FindOptionsWhere<Ocupation> = {
+      reservation: { publicId: findOption.reservationId, vehicule: { registration: findOption.vehiculeRegistration, user: { userName: findOption.userName } } },
+      place: { name: findOption.placeName },
+    };
+    if (await this.ocupationRepository.exist({ where: whereOption })) {
       return await this.ocupationRepository.findOne({
-        where: { place: { name: term } },
+        where: whereOption,
         relations: relations
-      })
+      });
     }
-    if (await this.ocupationRepository.exist({
-      where: {
-        vehicule: { registration: term }
-      }, relations: { vehicule: true }
-    })) {
-      return await this.ocupationRepository.findOne({
-        where: {
-          vehicule: { registration: term }
-        }, relations: relations
-      })
-    }
-    throw new BadRequestException(`No se encontró ninguna plaza ocupada para el criterio de busqueda: ${term}`);
+    this.logger.error(`No se encuentra una plaza ocupada`)
+    throw new BadRequestException(`No se encuentra una plaza ocupada`);
   }
 
-  async findOnePlain(term: string) {
-    const ocupation = await this.findOne(term);
+  async find(findOption: FindOcupationDto) {
+    if (!findOption.placeName && !findOption.reservationId && !findOption.userName && !findOption.vehiculeRegistration) {
+      return await this.findAllPlain();
+    } else {
+      return await this.findOnePlain(findOption);
+    }
+  }
+
+  async findOnePlain(findOption: FindOcupationDto) {
+    const ocupation = await this.findOne(findOption);
     return this.plainOcupationDB(ocupation);
   }
 
-  async remove(term: string) {
-    const ocupation = await this.findOne(term);
+  async remove(findOption: FindOcupationDto) {
+    const ocupation = await this.findOne(findOption);
     const where: FindOptionsWhere<Ocupation> = { id: ocupation.id };
     await this.ocupationRepository.delete(where);
     return this.plainOcupationDB(ocupation);

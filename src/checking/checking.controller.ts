@@ -1,19 +1,25 @@
-import { Controller, Post, Param, ParseIntPipe, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Param, ParseIntPipe } from '@nestjs/common';
 import { CheckingService } from './checking.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { AuhtUserRol } from 'src/auth/auth.decorator';
+import { Rol } from 'src/user/entities/user.rol';
 
+@ApiBearerAuth()
+@ApiSecurity('basic')
 @ApiTags('checking')
 @Controller('check')
 export class CheckingController {
   constructor(private readonly checkingService: CheckingService) { }
 
+  @AuhtUserRol([Rol.empleado])
   @Post('in/:id')
   check_in(@Param('id', ParseIntPipe) reservationId: number) {
     return this.checkingService.checkIn(reservationId);
   }
 
-  @Post('out/:registration')
-  check_out(@Param('registration') vehiculeRegistration: string) {
-    return this.checkingService.checkOut(vehiculeRegistration);
+  @AuhtUserRol([Rol.empleado])
+  @Post('out/:id')
+  check_out(@Param('id', ParseIntPipe) reservationId: number) {
+    return this.checkingService.checkOut(reservationId);
   }
 }

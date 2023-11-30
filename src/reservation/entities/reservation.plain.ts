@@ -8,4 +8,5 @@ export class PlainReservation {
     time: number;
     vehiculeRegistration: string;
     placeName: string;
+    userName: string;
 }
