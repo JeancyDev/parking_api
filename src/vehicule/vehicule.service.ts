@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -76,7 +76,7 @@ export class VehiculeService {
 			return await this.vehiculeRepository.findOne({ where: { user: { userName: user } }, relations: { user: true } });
 		} else {
 			this.logger.error(`El usuario: ${user} no tiene vehiculo registrado`);
-			throw new BadRequestException(`El usuario: ${user} no tiene vehiculo registrado`);
+			throw new NotFoundException(`El usuario: ${user} no tiene vehiculo registrado`);
 		}
 	}
 	async findOneByRegistration(registration: string) {
@@ -84,7 +84,7 @@ export class VehiculeService {
 			return await this.vehiculeRepository.findOne({ where: { registration: registration }, relations: { user: true } });
 		} else {
 			this.logger.error(`No existe el vehiculo: ${registration}`);
-			throw new BadRequestException(`No existe el vehiculo ${registration}`);
+			throw new NotFoundException(`No existe el vehiculo ${registration}`);
 		}
 	}
 
@@ -121,7 +121,7 @@ export class VehiculeService {
 		if (await this.vehiculeRepository.exist({ where: { registration: registration, user: { userName: user } } })) {
 			return true;
 		} else {
-			throw new BadRequestException(`El usuario: ${user}, no tiene el vehiculo: ${registration}`);
+			throw new NotFoundException(`El usuario: ${user}, no tiene el vehiculo: ${registration}`);
 		}
 	}
 }
