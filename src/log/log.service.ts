@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Log } from './entities/log.entity';
 import { Model } from 'mongoose';
 import { PlainLog } from './entities/log.plain';
+import { TypeLog } from './entities/type.log';
 
 @Injectable()
 export class LogService {
@@ -25,6 +26,18 @@ export class LogService {
 
   async findAll() {
     const logs = await this.logModel.find().exec();
+    return logs.map((log): PlainLog => {
+      return {
+        type: log.type,
+        userName: log.userName,
+        reservationId: log.reservationId,
+        date: log.date
+      };
+    });
+  }
+
+  async findAllType(type: TypeLog) {
+    const logs = await this.logModel.find({ type: type }).exec();
     return logs.map((log): PlainLog => {
       return {
         type: log.type,
