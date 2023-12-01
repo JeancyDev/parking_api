@@ -7,6 +7,7 @@ import { CommonModule } from 'src/common/common.module';
 import { VehiculeModule } from 'src/vehicule/vehicule.module';
 import { PlaceModule } from 'src/place/place.module';
 import { LogModule } from 'src/log/log.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { LogModule } from 'src/log/log.module';
     CommonModule,
     VehiculeModule,
     PlaceModule,
+    UserModule,
     LogModule
   ],
   controllers: [ReservationController],

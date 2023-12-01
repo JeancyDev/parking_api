@@ -8,7 +8,7 @@ export class UpdateVehiculeDto extends PartialType(CreateVehiculeDto) {
         type: String,
         description: 'La marca del vehiculo',
         example: 'Toyota',
-        required:false
+        required: false
     })
     brand?: string;
 
@@ -16,23 +16,15 @@ export class UpdateVehiculeDto extends PartialType(CreateVehiculeDto) {
         type: String,
         description: 'El modelo del vehiculo',
         example: 'modelo',
-        required:false
+        required: false
     })
     model?: string;
-
-    @ApiProperty({
-        description: 'El cliente dueño del vehiculo (usuario)',
-        example: 'username',
-        type: String,
-        required:false
-    })
-    owner?: string;
 
     @ApiProperty({
         type: String,
         description: 'La matrícula del vehiculo',
         example: 'ABC-123',
-        required:false
+        required: false
     })
     registration?: string;
 }

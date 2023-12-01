@@ -23,28 +23,21 @@ export class VehiculeService {
 		private readonly commonService: CommonService
 	) { }
 
-	async removeAll() {
-		await this.vehiculeRepository.delete({});
-	}
-
-	async create(findOption: FindVehiculeDto, createVehiculeDto: CreateVehiculeDto) {
-		const { ...vehiculeDetails } = createVehiculeDto;
-		const user = await this.userService.findOne(findOption.userName);
-		const vehicule = this.vehiculeRepository.create({ user: user, id: uuidV4(), ...vehiculeDetails, reservations: [] });
+	async create(userName: string, createVehiculeDto: CreateVehiculeDto) {
+		const user = await this.userService.findOne(userName);
+		const vehicule = this.vehiculeRepository.create({
+			user: user,
+			id: uuidV4(),
+			brand: createVehiculeDto.brand,
+			model: createVehiculeDto.model,
+			registration: createVehiculeDto.registration
+		});
 		try {
 			await this.vehiculeRepository.insert(vehicule);
 		} catch (error) {
 			this.commonService.handleException(error, this.logger);
 		}
 		return await this.plainVehicule(vehicule);
-	}
-
-	private findOptionWhere(findOption: FindVehiculeDto): FindOptionsWhere<Vehicule> {
-		return {
-			id: findOption.id,
-			registration: findOption.registration,
-			user: { userName: findOption.userName }
-		}
 	}
 
 	async findAll() {
@@ -63,9 +56,9 @@ export class VehiculeService {
 		});
 	}
 
-	async findOnePlain(findOption: FindVehiculeDto) {
+	async findOnePlain(registration: string) {
 		return this.plainVehicule(
-			await this.findOne(findOption)
+			await this.findOneByRegistration(registration)
 		);
 	}
 
@@ -74,36 +67,61 @@ export class VehiculeService {
 			brand: vehicule.brand,
 			model: vehicule.model,
 			registration: vehicule.registration,
-			owner: this.userService.plainUser(vehicule.user)
 		}
 		return plain;
 	}
 
-	async findOne(findOption: FindVehiculeDto) {
-		let whereOption: FindOptionsWhere<Vehicule> = this.findOptionWhere(findOption);
-		if (await this.vehiculeRepository.exist({ where: whereOption })) {
-			return await this.vehiculeRepository.findOne({ where: whereOption, relations: { user: true } });
+	async findOneByUser(user: string) {
+		if (await this.vehiculeRepository.exist({ where: { user: { userName: user } } })) {
+			return await this.vehiculeRepository.findOne({ where: { user: { userName: user } }, relations: { user: true } });
 		} else {
-			this.logger.error(`No existe el vehiculo`);
-			throw new BadRequestException(`No existe el vehiculo`);
+			this.logger.error(`El usuario: ${user} no tiene vehiculo registrado`);
+			throw new BadRequestException(`El usuario: ${user} no tiene vehiculo registrado`);
+		}
+	}
+	async findOneByRegistration(registration: string) {
+		if (await this.vehiculeRepository.exist({ where: { registration: registration } })) {
+			return await this.vehiculeRepository.findOne({ where: { registration: registration }, relations: { user: true } });
+		} else {
+			this.logger.error(`No existe el vehiculo: ${registration}`);
+			throw new BadRequestException(`No existe el vehiculo ${registration}`);
 		}
 	}
 
-	async update(findOption: FindVehiculeDto, updateVehiculeDto: UpdateVehiculeDto) {
-		const vehicule = await this.findOne(findOption);
-		const { owner, ...updateProps } = updateVehiculeDto;
+	async update(user: string, registration: string, updateVehiculeDto: UpdateVehiculeDto) {
+		await this.validateUserVehicule(user, registration);
+		const vehicule = await this.findOneByRegistration(registration);
 		try {
-			const updatedVehicule = await this.vehiculeRepository.preload({ id: vehicule.id, ...updateProps });
-			const { id } = await this.vehiculeRepository.save(updatedVehicule);
-			return await this.findOnePlain({ id: id });
+			const updatedVehicule = await this.vehiculeRepository.preload({
+				id: vehicule.id,
+				brand: updateVehiculeDto.brand,
+				model: updateVehiculeDto.model,
+				registration: updateVehiculeDto.registration
+			});
+			const where: FindOptionsWhere<Vehicule> = { id: vehicule.id };
+			await this.vehiculeRepository.update(where, updatedVehicule);
+			return this.plainVehicule(updatedVehicule);
 		} catch (error) {
 			this.commonService.handleException(error, this.logger);
 		}
 	}
 
-	async remove(findOption: FindVehiculeDto) {
-		const vehicule = await this.findOne(findOption);
-		await this.vehiculeRepository.remove(vehicule);
-		return await this.plainVehicule(vehicule);
+	async remove(user: string, registration: string) {
+		await this.validateUserVehicule(user, registration);
+		await this.findOneByRegistration(registration);
+		const where: FindOptionsWhere<Vehicule> = { registration: registration };
+		try {
+			return await this.vehiculeRepository.delete(where);
+		} catch (error) {
+			this.commonService.handleException(error, this.logger);
+		}
+	}
+
+	async validateUserVehicule(user: string, registration: string) {
+		if (await this.vehiculeRepository.exist({ where: { registration: registration, user: { userName: user } } })) {
+			return true;
+		} else {
+			throw new BadRequestException(`El usuario: ${user}, no tiene el vehiculo: ${registration}`);
+		}
 	}
 }

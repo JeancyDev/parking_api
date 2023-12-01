@@ -16,7 +16,7 @@ export class ReservationController {
 	@AuhtUserRol([Rol.cliente])
 	@Post()
 	create(@Request() req, @Body() createReservationDto: CreateReservationDto) {
-		return this.reservationService.create(createReservationDto, req.user);
+		return this.reservationService.create(createReservationDto, req.user.userName);
 	}
 
 	@AuhtUserRol([Rol.cliente, Rol.admin])

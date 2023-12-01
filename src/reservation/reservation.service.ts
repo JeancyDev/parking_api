@@ -15,6 +15,7 @@ import { LogService } from 'src/log/log.service';
 import { TypeLog } from 'src/log/entities/type.log';
 import { Payload } from 'src/auth/dto/payload';
 import { Rol } from 'src/user/entities/user.rol';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ReservationService {
@@ -28,12 +29,10 @@ export class ReservationService {
 		private readonly logService: LogService,
 		private readonly commonService: CommonService) { }
 
-	async create(createReservationDto: CreateReservationDto, user: Payload) {
+	async create(createReservationDto: CreateReservationDto, user: string) {
 		const startDate: number = new Date(createReservationDto.dateTime).getTime();
 		const endDate: number = getDateAfterTime(startDate, createReservationDto.time);
-		const vehicule = await this.vehiculeService.findOne({
-			userName: user.userName
-		});
+		const vehicule = await this.vehiculeService.findOneByUser(user);
 		const place = await this.placeService.findPlaceFree(startDate, endDate);
 		const reservation = this.reservationRepository.create({
 			id: uuidV4(),

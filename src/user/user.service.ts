@@ -38,14 +38,14 @@ export class UserService {
 		}
 	}
 
+	async findAllPlain() {
+		return (await this.findAll()).map((user) => {
+			return this.plainUser(user);
+		})
+	}
+
 	async findAll() {
-		return await this.userRepository.find({
-			select: {
-				fullName: true,
-				rol: true,
-				userName: true
-			}
-		});
+		return await this.userRepository.find({});
 	}
 
 	async findOnePlain(term: string): Promise<PlainUser> {
@@ -87,16 +87,13 @@ export class UserService {
 	}
 
 	async remove(userName: string) {
-		if (await this.userRepository.exist({ where: { userName: userName } })) {
-			const where: FindOptionsWhere<User> = { userName: userName };
-			try {
-				return await this.userRepository.delete(where);
-			} catch (error) {
-				this.commonService.handleException(error, this.logger);
-			}
-		}
-		else {
-			throw new BadRequestException(`No existe el usuario: ${userName}`);
+		const user = await this.findOne(userName);
+		const where: FindOptionsWhere<User> = { userName: userName };
+		try {
+			await this.userRepository.delete(where);
+			return this.plainUser(user);
+		} catch (error) {
+			this.commonService.handleException(error, this.logger);
 		}
 	}
 }
