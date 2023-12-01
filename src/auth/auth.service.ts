@@ -17,14 +17,12 @@ export class AuthService {
             const { id, userName, password, rol } = await this.userService.findOne(sigInDto.userName);
             if (await compare(sigInDto.password, password)) {
                 const payload = { sub: id, userName: userName, rol: rol };
-                return {
-                    acces_token: await this.jwtService.signAsync(payload)
-                }
+                return await this.jwtService.signAsync(payload)
             } else {
-                throw new UnauthorizedException();
+                throw new BadRequestException(`Usuario o Contraseña Incorrectos`);
             }
         } catch (error) {
-            throw new UnauthorizedException(`Usuario o Contraseña Incorrectos`);
+            throw new BadRequestException(`Usuario o Contraseña Incorrectos`);
         }
     }
 }

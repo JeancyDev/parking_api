@@ -1,16 +1,15 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards, Request } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SigInDto } from './dto/sigIn.dto';
-import { ApiTags, ApiBearerAuth, ApiSecurity, ApiHeader, } from '@nestjs/swagger';
-import { AuthGuard } from './auth.guard';
-import { Payload } from './dto/payload';
+import { ApiTags, ApiOkResponse, ApiBadRequestResponse, } from '@nestjs/swagger';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
-    @HttpCode(HttpStatus.OK)
+    @ApiOkResponse({ type: String, description: 'Usuario Logeado, Jwt obtenido' })
+    @ApiBadRequestResponse({description:'Usuario o contraseña incorrecto'})
     @Post('login')
     login(@Body() sigIn: SigInDto) {
         return this.authService.signIn(sigIn);
