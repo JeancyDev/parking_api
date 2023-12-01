@@ -20,7 +20,7 @@ export class CheckingService {
     private readonly logService: LogService,
     private readonly commonService: CommonService) { }
 
-  async checkIn(reservationId: number) {
+  async checkIn(reservationId: number): Promise<PlainCheckIn> {
     const reservation = await this.reservationService.findOne(reservationId);
     let avilable = false;
     let ocupation: Ocupation = null;
@@ -42,7 +42,13 @@ export class CheckingService {
         reservationId: reservation.publicId,
         type: TypeLog.check_in
       })
-      return this.plainCheckIn(ocupation);
+      return {
+        date: date,
+        placeName: reservation.place.name,
+        reservationId: reservation.publicId,
+        userName: reservation.vehicule.user.userName,
+        vehiculeRegistration: reservation.vehicule.registration
+      };
     }
     else {
       if (ocupation !== null) {
@@ -85,6 +91,7 @@ export class CheckingService {
       );
 
       const plainCheckOut: PlainCheckOut = {
+        reservationId: reservationId,
         vehiculeRegistration: ocupation.reservation.vehicule.registration,
         placeName: ocupation.place.name,
         userName: ocupation.reservation.vehicule.user.userName,
@@ -104,15 +111,6 @@ export class CheckingService {
       return plainCheckOut;
     } catch (error) {
       throw new BadRequestException(`No existe una plaza ocupada por el vehiculo: ${reservation.vehicule.registration}`);
-    }
-  }
-
-  plainCheckIn(ocupation: Ocupation): PlainCheckIn {
-    return {
-      placeName: ocupation.place.name,
-      userName: ocupation.reservation.vehicule.user.userName,
-      vehiculeRegistration: ocupation.reservation.vehicule.registration,
-      date: ocupation.startDate
     }
   }
 }
