@@ -46,18 +46,13 @@ export class PlaceService {
     })
   }
 
-  async findOne(term: string) {
-    let whereOption: FindOptionsWhere<Place> = {};
-    if (validate(term)) {
-      whereOption = { id: term };
+  async findOne(name: string) {
+    if (await this.placeRepository.exist({ where: { name: name } })) {
+      return await this.placeRepository.findOne({ where: { name: name } })
     } else {
-      whereOption = { name: term };
+      this.logger.error(`No se encontro la plaza: ${name}`);
+      throw new NotFoundException(`No se encontro la plaza: ${name}`);
     }
-    const place = await this.placeRepository.findOne({ where: whereOption, relations: { reservations: { vehicule: { user: true } } } })
-    if (!place) {
-      throw new BadRequestException(`No existe la plaza ${term}`);
-    }
-    return place;
   }
 
   async findOnePlain(term: string) {

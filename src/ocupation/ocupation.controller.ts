@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Param, Request, Query, ParseIntPipe } from '@nestjs/common';
 import { OcupationService } from './ocupation.service';
-import { ApiBearerAuth, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiNotFoundResponse, ApiOkResponse, ApiSecurity, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuhtUserRol } from 'src/auth/auth.decorator';
 import { Rol } from 'src/user/entities/user.rol';
 import { FindOcupationDto } from './dto/find-ocupation.dto';
+import { PlainOcupation } from './entities/ocupation.plain';
 
 @ApiBearerAuth()
 @ApiSecurity('basic')
@@ -13,8 +14,19 @@ export class OcupationController {
   constructor(private readonly ocupationService: OcupationService) { }
 
   @AuhtUserRol([Rol.empleado])
+  @ApiUnauthorizedResponse({ description: 'No esta autorizado' })
+  @ApiOkResponse({ type: PlainOcupation, isArray: true, description: 'Plazas ocupada' })
   @Get()
-  findOne(@Query() findOption: FindOcupationDto) {
-    return this.ocupationService.find(findOption);
+  findAll() {
+    return this.ocupationService.findAllPlain();
+  }
+
+  @AuhtUserRol([Rol.empleado])
+  @ApiUnauthorizedResponse({ description: 'No esta autorizado' })
+  @ApiOkResponse({ type: PlainOcupation, description: 'Plaza ocupada' })
+  @ApiNotFoundResponse({ description: 'Plaza ocupada no encontrada' })
+  @Get(':place')
+  findOne(@Param('place') place: string) {
+    return this.ocupationService.findOnePlain(place);
   }
 }

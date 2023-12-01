@@ -37,9 +37,9 @@ export class PlaceController {
   @ApiNotFoundResponse({ description: 'Plaza no encontrada' })
   @ApiBadRequestResponse({ description: 'Llave repetida' })
   @ApiUnauthorizedResponse({ description: 'No esta autorizado' })
-  @Get(':term')
-  findOne(@Param('term') term: string) {
-    return this.placeService.findOnePlain(term);
+  @Get(':place')
+  findOne(@Param('place') place: string) {
+    return this.placeService.findOnePlain(place);
   }
 
   @AuhtUserRol([Rol.admin])

@@ -25,7 +25,7 @@ export class CheckingService {
     let avilable = false;
     let ocupation: Ocupation = null;
     try {
-      ocupation = await this.ocupationService.findOne({ reservationId: reservation.publicId });
+      ocupation = await this.ocupationService.findOne(reservation.place.name);
       avilable = false;
     } catch (error) {
       avilable = true;
@@ -67,13 +67,8 @@ export class CheckingService {
   async checkOut(reservationId: number) {
     const reservation = await this.reservationService.findOne(reservationId);
     try {
-      const ocupation = await this.ocupationService.findOne({ reservationId: reservation.publicId });
-      await this.ocupationService.remove({
-        placeName: ocupation.place.name,
-        reservationId: ocupation.reservation.publicId,
-        userName: ocupation.reservation.vehicule.user.userName,
-        vehiculeRegistration: reservation.vehicule.registration
-      });
+      const ocupation = await this.ocupationService.findOne(reservation.place.name);
+      await this.ocupationService.remove(reservation.place.name);
       const ocupationStartDate: number = new Date(`${ocupation.startDate} ${ocupation.startTime}`).getTime();
       const endReservedDate = getDateAfterTime(
         ocupationStartDate,

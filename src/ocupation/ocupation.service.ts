@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateOcupationDto } from './dto/create-ocupation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Ocupation } from './entities/ocupation.entity';
@@ -7,6 +7,7 @@ import { v4 as uuidV4, validate } from 'uuid';
 import { CommonService } from 'src/common/common.service';
 import { PlainOcupation } from './entities/ocupation.plain';
 import { FindOcupationDto } from './dto/find-ocupation.dto';
+import { PlaceService } from 'src/place/place.service';
 
 @Injectable()
 export class OcupationService {
@@ -16,7 +17,8 @@ export class OcupationService {
   constructor(
     @InjectRepository(Ocupation)
     private readonly ocupationRepository: Repository<Ocupation>,
-    private readonly commonService: CommonService
+    private readonly commonService: CommonService,
+    private readonly placeService: PlaceService
   ) { }
 
   async create(createOcupationDto: CreateOcupationDto) {
@@ -27,7 +29,6 @@ export class OcupationService {
       startTime: createOcupationDto.dateTime,
       reservation: createOcupationDto.reservation
     });
-
     try {
       await this.ocupationRepository.insert(ocupation);
       return ocupation;
@@ -66,43 +67,36 @@ export class OcupationService {
     }
   }
 
-  async findOne(findOption: FindOcupationDto) {
+  async findOne(place: string) {
     const relations: FindOptionsRelations<Ocupation> = {
       reservation: { vehicule: { user: true } },
       place: true,
     }
-
-    let whereOption: FindOptionsWhere<Ocupation> = {
-      reservation: { publicId: findOption.reservationId, vehicule: { registration: findOption.vehiculeRegistration, user: { userName: findOption.userName } } },
-      place: { name: findOption.placeName },
-    };
-    if (await this.ocupationRepository.exist({ where: whereOption })) {
+    await this.placeService.findOne(place);
+    if (await this.ocupationRepository.exist({ where: { place: { name: place } } })) {
       return await this.ocupationRepository.findOne({
-        where: whereOption,
+        where: { place: { name: place } },
         relations: relations
       });
-    }
-    this.logger.error(`No se encuentra una plaza ocupada`)
-    throw new BadRequestException(`No se encuentra una plaza ocupada`);
-  }
-
-  async find(findOption: FindOcupationDto) {
-    if (!findOption.placeName && !findOption.reservationId && !findOption.userName && !findOption.vehiculeRegistration) {
-      return await this.findAllPlain();
     } else {
-      return await this.findOnePlain(findOption);
+      this.logger.error(`La plaza ${place} no está ocupada`)
+      throw new NotFoundException(`La plaza ${place} no está ocupada`);
     }
   }
 
-  async findOnePlain(findOption: FindOcupationDto) {
-    const ocupation = await this.findOne(findOption);
+  async findOnePlain(place: string) {
+    const ocupation = await this.findOne(place);
     return this.plainOcupationDB(ocupation);
   }
 
-  async remove(findOption: FindOcupationDto) {
-    const ocupation = await this.findOne(findOption);
+  async remove(place: string) {
+    const ocupation = await this.findOne(place);
     const where: FindOptionsWhere<Ocupation> = { id: ocupation.id };
-    await this.ocupationRepository.delete(where);
+    try {
+      await this.ocupationRepository.delete(where);
+    } catch (error) {
+      this.commonService.handleException(error, this.logger);
+    }
     return this.plainOcupationDB(ocupation);
   }
 }
