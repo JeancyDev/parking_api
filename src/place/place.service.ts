@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 import { v4 as uuidV4, validate } from 'uuid';
@@ -110,7 +110,7 @@ export class PlaceService {
         });
     }
     else {
-      throw new BadRequestException(`No existe una plaza disponible en el periodo solicitado`);
+      throw new NotFoundException(`No existe una plaza disponible en el periodo solicitado`);
     }
   }
 

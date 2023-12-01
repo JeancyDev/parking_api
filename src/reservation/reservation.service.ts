@@ -42,11 +42,10 @@ export class ReservationService {
 			startTime: new Date(startDate),
 			time: createReservationDto.time
 		})
+		reservation.publicId = await this.findLastId();
+		reservation.publicId++;
 		try {
-			reservation.publicId = await this.findLastId();
-			reservation.publicId++;
 			await this.reservationRepository.insert(reservation);
-
 			await this.logService.create({
 				userName: reservation.vehicule.user.userName,
 				reservationId: reservation.publicId,
@@ -62,7 +61,6 @@ export class ReservationService {
 		return {
 			publicId: reservation.publicId,
 			startDate: reservation.startDate,
-			startTime: reservation.startTime,
 			time: reservation.time,
 			placeName: reservation.place.name,
 			vehiculeRegistration: reservation.vehicule.registration,
@@ -142,8 +140,8 @@ export class ReservationService {
 		}
 	}
 
-	async update(id: number, updateReservationDto: UpdateReservationDto) {
-		const reservation: Reservation = await this.findOne(id);
+	async update(user: string, id: number, updateReservationDto: UpdateReservationDto) {
+		const reservation: Reservation = await this.findOne(id, user);
 		const start: number = new Date(updateReservationDto.dateTime).getTime();
 		const end: number = getDateAfterTime(start, updateReservationDto.time);
 		const where: FindOptionsWhere<Reservation> = { id: reservation.id };
@@ -165,10 +163,10 @@ export class ReservationService {
 		}
 	}
 
-	async desactiveReservation(id: number, req?: Payload) {
+	async desactiveReservation(id: number, user?: string) {
 		let reservation: Reservation = undefined;
-		if (req) {
-			reservation = await this.findOne(id, req.userName);
+		if (user) {
+			reservation = await this.findOne(id, user);
 		} else {
 			reservation = await this.findOne(id);
 		}
