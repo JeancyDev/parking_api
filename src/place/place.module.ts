@@ -4,6 +4,7 @@ import { PlaceController } from './place.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Place } from './entities/place.entity';
 import { CommonModule } from 'src/common/common.module';
+import { OcupationModule } from 'src/ocupation/ocupation.module';
 
 @Module({
   imports: [

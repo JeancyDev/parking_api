@@ -40,12 +40,12 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
     MongooseModule.forRoot(
       `mongodb://${process.env.DB_MONGO_HOST}:${process.env.DB_MONGO_PORT}/${process.env.DB_MONGO_DB_NAME}`,
     ),
+    OcupationModule,
     PlaceModule,
     UserModule,
     ReservationModule,
     VehiculeModule,
     CommonModule,
-    OcupationModule,
     SeedModule,
     CheckingModule,
     LogModule,

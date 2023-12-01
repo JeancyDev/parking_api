@@ -1,6 +1,6 @@
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Ocupation } from "src/ocupation/entities/ocupation.entity";
 import { Reservation } from "src/reservation/entities/reservation.entity";
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Place {

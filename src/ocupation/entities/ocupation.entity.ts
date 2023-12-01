@@ -1,6 +1,5 @@
 import { Place } from "src/place/entities/place.entity";
 import { Reservation } from "src/reservation/entities/reservation.entity";
-import { Vehicule } from "src/vehicule/entities/vehicule.entity";
 import { Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
