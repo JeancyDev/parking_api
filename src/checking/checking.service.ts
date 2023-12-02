@@ -3,9 +3,7 @@ import { OcupationService } from 'src/ocupation/ocupation.service';
 import { ReservationService } from 'src/reservation/reservation.service';
 import { Ocupation } from 'src/ocupation/entities/ocupation.entity';
 import { PlainCheckIn } from './entities/check_in.plain';
-import { VehiculeService } from 'src/vehicule/vehicule.service';
 import { PlainCheckOut } from './entities/check_out.plain';
-import { CommonService } from 'src/common/common.service';
 import { getDateAfterTime, getTimeBetween } from 'src/common/utils/date-manage';
 import { LogService } from 'src/log/log.service';
 import { TypeLog } from 'src/log/entities/type.log';
@@ -16,9 +14,7 @@ export class CheckingService {
   constructor(
     private readonly ocupationService: OcupationService,
     private readonly reservationService: ReservationService,
-    private readonly vehiculeService: VehiculeService,
-    private readonly logService: LogService,
-    private readonly commonService: CommonService) { }
+    private readonly logService: LogService) { }
 
   async checkIn(reservationId: number): Promise<PlainCheckIn> {
     const reservation = await this.reservationService.findOne(reservationId);
@@ -32,11 +28,6 @@ export class CheckingService {
     }
     if (avilable) {
       let date: Date = new Date()
-      const ocupation = await this.ocupationService.create({
-        dateTime: date,
-        place: reservation.place,
-        reservation: reservation
-      });
       await this.logService.create({
         userName: reservation.vehicule.user.userName,
         reservationId: reservation.publicId,

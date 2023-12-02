@@ -1,15 +1,13 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateVehiculeDto } from './dto/create-vehicule.dto';
 import { UpdateVehiculeDto } from './dto/update-vehicule.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Vehicule } from './entities/vehicule.entity';
 import { FindOptionsWhere, Repository } from 'typeorm';
-import { v4 as uuidV4, validate } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 import { UserService } from 'src/user/user.service';
 import { PlainVehicule } from './entities/vehicule.plain';
 import { CommonService } from 'src/common/common.service';
-import { FindVehiculeDto } from './dto/find-vehicule.dto';
-import { Payload } from 'src/auth/dto/payload';
 
 @Injectable()
 export class VehiculeService {

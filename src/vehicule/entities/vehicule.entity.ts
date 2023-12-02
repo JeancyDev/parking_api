@@ -1,7 +1,6 @@
-import { Ocupation } from "src/ocupation/entities/ocupation.entity";
 import { Reservation } from "src/reservation/entities/reservation.entity";
 import { User } from "src/user/entities/user.entity";
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Vehicule {

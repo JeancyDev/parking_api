@@ -1,17 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsDate, IsDateString, IsInt, IsNotEmpty, IsNumber, IsObject, IsPositive, IsString, Min } from "class-validator";
-import { SimpleDateDto, SimpleTimeDto } from "../../common/utils/date-manage";
+import { IsDateString, IsInt, IsNumber, IsPositive, Min } from "class-validator";
 
 export class CreateReservationDto {
-
-    // @ApiProperty({
-    //     type: String,
-    //     description: 'La matricula del vehiculo',
-    //     example: 'matricula',
-    // })
-    // @IsString()
-    // @IsNotEmpty()
-    // vehiculeRegistration: string;
 
     @ApiProperty({
         type: () => Date,

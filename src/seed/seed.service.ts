@@ -1,23 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreatePlaceDto } from 'src/place/dto/create-place.dto';
 import { Place } from 'src/place/entities/place.entity';
-import { PlaceService } from 'src/place/place.service';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { User } from 'src/user/entities/user.entity';
-import { UserService } from 'src/user/user.service';
-import { CreateVehiculeDto } from 'src/vehicule/dto/create-vehicule.dto';
 import { Vehicule } from 'src/vehicule/entities/vehicule.entity';
-import { VehiculeService } from 'src/vehicule/vehicule.service';
 import { Repository } from 'typeorm';
 import { v4 as uuidV4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
-import { Ocupation } from 'src/ocupation/entities/ocupation.entity';
-import { privateDecrypt } from 'crypto';
-import { CreateOcupationDto } from 'src/ocupation/dto/create-ocupation.dto';
-import { CreateReservationDto } from 'src/reservation/dto/create-reservation.dto';
 import { Reservation } from 'src/reservation/entities/reservation.entity';
-import { ReservationService } from 'src/reservation/reservation.service';
 import { Rol } from 'src/user/entities/user.rol';
 
 @Injectable()
@@ -30,8 +19,6 @@ export class SeedService {
 		private readonly vehiculeRepository: Repository<Vehicule>,
 		@InjectRepository(Place)
 		private readonly placeRepository: Repository<Place>,
-		@InjectRepository(Ocupation)
-		private readonly ocupationRepository: Repository<Ocupation>,
 		@InjectRepository(Reservation)
 		private readonly reservationRepository: Repository<Reservation>,
 	) { }

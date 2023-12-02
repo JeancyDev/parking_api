@@ -8,14 +8,12 @@ import { CommonService } from 'src/common/common.service';
 import { v4 as uuidV4 } from 'uuid';
 import { VehiculeService } from 'src/vehicule/vehicule.service';
 import { PlaceService } from 'src/place/place.service';
-import { SimpleDateDto, getDateForSimple, getDateAfterTime, getSimpleDate, getSimpleTime, isDateBetween, getDateForDate } from '../common/utils/date-manage';
+import { getDateAfterTime } from '../common/utils/date-manage';
 import { PlainReservation } from './entities/reservation.plain';
-import { Place } from 'src/place/entities/place.entity';
 import { LogService } from 'src/log/log.service';
 import { TypeLog } from 'src/log/entities/type.log';
 import { Payload } from 'src/auth/dto/payload';
 import { Rol } from 'src/user/entities/user.rol';
-import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class ReservationService {

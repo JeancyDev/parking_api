@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PlaceService } from './place.service';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
@@ -46,8 +46,8 @@ export class PlaceController {
   @ApiOkResponse({ type: PlainPlace, description: 'Plaza actualizada' })
   @ApiBadRequestResponse({ description: 'Llave repetida' })
   @ApiUnauthorizedResponse({ description: 'No esta autorizado' })
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceDto) {
+  @Patch(':place')
+  update(@Param('place') id: string, @Body() updatePlaceDto: UpdatePlaceDto) {
     return this.placeService.update(id, updatePlaceDto);
   }
 
@@ -56,8 +56,8 @@ export class PlaceController {
   @ApiBadRequestResponse({ description: 'Llave repetida' })
   @ApiNotFoundResponse({ description: 'Plaza no encontrada' })
   @ApiUnauthorizedResponse({ description: 'No esta autorizado' })
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(':place')
+  remove(@Param('place') id: string) {
     return this.placeService.remove(id);
   }
 }

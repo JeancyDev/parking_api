@@ -3,12 +3,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { v4 as uuidV4, validate } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { FindOptionsWhere, Repository } from 'typeorm';
 import { CommonService } from 'src/common/common.service';
 import { PlainUser } from './entities/user.plain';
-import { Payload } from 'src/auth/dto/payload';
 
 @Injectable()
 export class UserService {

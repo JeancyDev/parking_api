@@ -1,4 +1,4 @@
-import { IsDate, IsDateString, IsInt, IsPositive } from 'class-validator';
+import { IsDateString, IsInt, IsPositive } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateReservationDto {

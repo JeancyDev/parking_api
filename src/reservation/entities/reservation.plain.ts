@@ -1,6 +1,4 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { PlainPlace } from "src/place/entities/place.plain";
-import { PlainVehicule } from "src/vehicule/entities/vehicule.plain";
 
 export class PlainReservation {
 

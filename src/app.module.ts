@@ -16,10 +16,9 @@ import { CheckingModule } from './checking/checking.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LogModule } from './log/log.module';
 import { ConfigModule } from '@nestjs/config';
-import { AuthModule, JwtSecret } from './auth/auth.module';
+import { AuthModule } from './auth/auth.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
-import { JwtModule, JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -40,16 +39,16 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
     MongooseModule.forRoot(
       `mongodb://${process.env.DB_MONGO_HOST}:${process.env.DB_MONGO_PORT}/${process.env.DB_MONGO_DB_NAME}`,
     ),
-    OcupationModule,
-    PlaceModule,
-    UserModule,
-    ReservationModule,
-    VehiculeModule,
-    CommonModule,
     SeedModule,
+    AuthModule,
+    UserModule,
     CheckingModule,
+    OcupationModule,
+    VehiculeModule,
+    ReservationModule,
+    PlaceModule,
     LogModule,
-    AuthModule
+    CommonModule,
   ],
   providers: [{
     provide: APP_GUARD,

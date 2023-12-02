@@ -1,13 +1,13 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreatePlaceDto } from './dto/create-place.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
-import { v4 as uuidV4, validate } from 'uuid';
-import { FindOptionsWhere, Repository } from 'typeorm';
+import { v4 as uuidV4 } from 'uuid';
+import { Repository } from 'typeorm';
 import { Place } from './entities/place.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CommonService } from 'src/common/common.service';
 import { PlainPlace } from './entities/place.plain';
-import { SimpleDateDto, getDateAfterTime, isDateBetween } from 'src/common/utils/date-manage';
+import { getDateAfterTime, isDateBetween } from 'src/common/utils/date-manage';
 import { Reservation } from 'src/reservation/entities/reservation.entity';
 
 @Injectable()

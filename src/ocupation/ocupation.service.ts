@@ -1,12 +1,11 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateOcupationDto } from './dto/create-ocupation.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Ocupation } from './entities/ocupation.entity';
 import { FindOptionsRelations, FindOptionsWhere, Repository } from 'typeorm';
-import { v4 as uuidV4, validate } from 'uuid';
+import { v4 as uuidV4 } from 'uuid';
 import { CommonService } from 'src/common/common.service';
 import { PlainOcupation } from './entities/ocupation.plain';
-import { FindOcupationDto } from './dto/find-ocupation.dto';
 import { PlaceService } from 'src/place/place.service';
 
 @Injectable()

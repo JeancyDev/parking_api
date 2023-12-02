@@ -1,5 +1,4 @@
-import { Vehicule } from "src/vehicule/entities/vehicule.entity";
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { Rol } from "./user.rol";
 
 @Entity()

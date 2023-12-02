@@ -1,7 +1,7 @@
 import { Ocupation } from "src/ocupation/entities/ocupation.entity";
 import { Place } from "src/place/entities/place.entity";
 import { Vehicule } from "src/vehicule/entities/vehicule.entity";
-import { BeforeInsert, Column, Entity, Generated, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Reservation {
